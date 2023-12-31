@@ -28,6 +28,19 @@ type db struct {
 	Connection *sql.DB
 }
 
+func (d db) validateAuthorization(token string) bool {
+	var dbToken string
+	row := d.Connection.QueryRow("select key from authorization where key = ?", token)
+	err := row.Scan(&dbToken)
+
+	if err != nil {
+		log.Println("Failed to get token... Are you sure you're authorized? Token:", token)
+		return false
+	}
+
+	return token == dbToken
+}
+
 func (d db) saveShortUrl(originalUrl string) (shortURL, error) {
 	key := shortuuid.New()
 	short := mkShortURL(key)
@@ -56,15 +69,16 @@ func mkShortURL(path string) shortURL {
 	return shortURL{baseURL() + "/" + path}
 }
 
-func validateAuthorization(token string) bool {
-	// TODO: Check if token in sqlite db
-	return true
-}
-
 func createLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Pass in auth token from request
-		isAuthed := validateAuthorization("test")
+		authHeader := r.Header.Get("Authorization")
+		if len(authHeader) < 1 || !strings.Contains(authHeader, "Bearer ") {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		token := strings.Split(authHeader, "Bearer ")[1]
+		isAuthed := db.validateAuthorization(token)
 
 		if !isAuthed {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -125,6 +139,10 @@ func main() {
 	_db, err := sql.Open("sqlite3", "./smolink.db")
 	defer _db.Close()
 	db := db{_db}
+	_, err = db.Connection.Exec("create table if not exists authorization (id integer PRIMARY KEY, key text NOT NULL, date_created INTEGER NOT NULL)")
+	if err != nil {
+		log.Println("Failed to created table with error:", err)
+	}
 
 	_, err = db.Connection.Exec("create table if not exists links (short_url text NOT NULL PRIMARY KEY, full_url text NOT NULL, date_created INTEGER NOT NULL)")
 	if err != nil {
