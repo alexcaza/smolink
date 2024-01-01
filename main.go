@@ -105,6 +105,7 @@ func createLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			values := r.URL.Query()
+			log.Println("URL given: ", values.Get("url"))
 			url, err := url.ParseRequestURI(values.Get("url"))
 			if err != nil {
 				log.Println("Malformed URL: ", err)
