@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/lithammer/shortuuid/v4"
 	_ "github.com/mattn/go-sqlite3"
@@ -59,6 +60,22 @@ func (d db) getFullUrl(shortUrl shortURL) (string, error) {
 	err = row.Scan(&fullUrl)
 
 	return fullUrl, err
+}
+
+func (d db) generateAuthorizationToken() (string, error) {
+	var existingKey string
+	row := d.Connection.QueryRow("select key from authorization")
+	err := row.Scan(&existingKey)
+
+	// Scan throws err on empty; exit without creating new if
+	// a row is present already
+	if err == nil {
+		return "", err
+	}
+
+	key := uuid.New().String()
+	_, err = d.Connection.Exec("insert into authorization (id, key, date_created) values(?, ?, ?)", nil, key, time.Now())
+	return key, err
 }
 
 func baseURL() string {
@@ -142,6 +159,17 @@ func main() {
 	_, err = db.Connection.Exec("create table if not exists authorization (id integer PRIMARY KEY, key text NOT NULL, date_created INTEGER NOT NULL)")
 	if err != nil {
 		log.Println("Failed to created table with error:", err)
+	}
+
+	// Create default authorization key if none present
+	key, err := db.generateAuthorizationToken()
+
+	if err != nil {
+		log.Fatalln("Couldn't generate default auth key with: ", err)
+	}
+
+	if len(key) > 0 {
+		log.Println("Default authorization key:", key)
 	}
 
 	_, err = db.Connection.Exec("create table if not exists links (short_url text NOT NULL PRIMARY KEY, full_url text NOT NULL, date_created INTEGER NOT NULL)")
