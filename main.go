@@ -62,7 +62,7 @@ func (d db) getFullUrl(shortUrl shortURL) (string, error) {
 	return fullUrl, err
 }
 
-func (d db) generateAuthorizationToken() (string, error) {
+func (d db) generateDefaultAuthorizationToken() (string, error) {
 	var existingKey string
 	row := d.Connection.QueryRow("select key from authorization")
 	err := row.Scan(&existingKey)
@@ -162,7 +162,7 @@ func main() {
 	}
 
 	// Create default authorization key if none present
-	key, err := db.generateAuthorizationToken()
+	key, err := db.generateDefaultAuthorizationToken()
 
 	if err != nil {
 		log.Fatalln("Couldn't generate default auth key with: ", err)
