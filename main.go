@@ -107,12 +107,14 @@ func createLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 			values := r.URL.Query()
 			url, err := url.ParseRequestURI(values.Get("url"))
 			if err != nil {
+				log.Println("Malformed URL: ", err)
 				http.Error(w, "Malformed URL", http.StatusBadRequest)
 				return
 			}
 
 			shortURL, err := db.saveShortUrl(url.String())
 			if err != nil {
+				log.Println("Creating short url failed with: ", err)
 				http.Error(w, "Failed to create short url", http.StatusInternalServerError)
 				return
 			}
@@ -134,8 +136,8 @@ func expandLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 			path := shortURL{r.URL.Path}
 			fullUrl, err := db.getFullUrl(path)
 			if err != nil {
+				log.Println("Failed to find full URL: ", err)
 				http.Error(w, "Failed to get full url", http.StatusInternalServerError)
-				fmt.Println(err)
 				return
 			}
 
