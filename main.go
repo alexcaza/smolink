@@ -180,5 +180,6 @@ func main() {
 	http.HandleFunc("/", expandLinkHandler(db))
 	http.HandleFunc("/c", createLinkHandler(db))
 
-	log.Fatalln(http.ListenAndServe(":9000", nil))
+	log.Println("Running at", os.Getenv("BASE_URL"))
+	log.Fatalln(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
 }
