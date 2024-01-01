@@ -18,7 +18,8 @@ import (
 )
 
 type newURLResponse struct {
-	Url string `json:"url"`
+	Url      string `json:"url"`
+	Shorturl string `json:"shorturl"`
 }
 
 type shortURL struct {
@@ -120,7 +121,7 @@ func createLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			response := newURLResponse{Url: shortURL.Value}
+			response := newURLResponse{Url: shortURL.Value, Shorturl: shortURL.Value}
 			fmt.Println(url, response)
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(response)
