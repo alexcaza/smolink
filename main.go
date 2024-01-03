@@ -104,8 +104,7 @@ func createLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		switch r.Method {
-		case http.MethodGet:
-		case http.MethodPost:
+		case http.MethodPost, http.MethodGet:
 			values := r.URL.Query()
 			log.Println("URL given: ", values.Get("url"))
 			url, err := url.ParseRequestURI(values.Get("url"))
