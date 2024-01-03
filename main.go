@@ -104,6 +104,7 @@ func createLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		switch r.Method {
+		case http.MethodGet:
 		case http.MethodPost:
 			values := r.URL.Query()
 			log.Println("URL given: ", values.Get("url"))
@@ -151,7 +152,6 @@ func expandLinkHandler(db db) func(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalln("Error loading .env file.")
